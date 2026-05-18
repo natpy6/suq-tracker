@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suq Tracker — Field Research</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a1a;--muted:#6b6b6b;--border:#e0ddd8;--surface:#fafaf8;
+  --paper:#ffffff;--accent:#2d5a1b;--accent-light:#eaf3de;--accent-mid:#639922;
+  --danger:#a32d2d;--danger-light:#fcebeb;--warn:#854f0b;--warn-light:#faeeda;
+  --radius:8px;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+body{font-family:var(--sans);background:var(--surface);color:var(--ink);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--ink);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:0.05em;opacity:0.9;}
+.date-badge{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:4px;}
+
+/* LAYOUT */
+.container{max-width:720px;margin:0 auto;padding:1.5rem 1rem 4rem;}
+
+/* FOCUS CARD */
+.focus-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;}
+.section-label{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:0.75rem;}
+.focus-text{font-size:13px;color:var(--muted);line-height:1.6;font-family:var(--mono);border-left:3px solid var(--accent-mid);padding-left:0.75rem;}
+
+/* COUNTER */
+.counter-block{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;}
+.counter-num{font-family:var(--mono);font-size:56px;font-weight:600;color:var(--ink);line-height:1;min-width:80px;}
+.counter-meta{flex:1;}
+.counter-label{font-size:13px;color:var(--muted);margin-bottom:0.5rem;}
+.counter-stats{display:flex;gap:1rem;font-family:var(--mono);font-size:11px;}
+.stat-pill{padding:3px 8px;border-radius:4px;font-weight:500;}
+.pill-yes{background:var(--accent-light);color:var(--accent);}
+.pill-no{background:var(--danger-light);color:var(--danger);}
+.pill-maybe{background:var(--warn-light);color:var(--warn);}
+.tap-btn{width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;transition:transform 0.1s,background 0.1s;flex-shrink:0;font-family:var(--mono);}
+.tap-btn:active{transform:scale(0.92);background:#1f3f12;}
+
+/* LOG FORM */
+.log-form{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;}
+.form-row{margin-bottom:1rem;}
+.form-row label{display:block;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:0.4rem;}
+input[type=text],textarea,select{
+  width:100%;font-family:var(--sans);font-size:14px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;outline:none;transition:border-color 0.15s;
+}
+input[type=text]:focus,textarea:focus,select:focus{border-color:var(--accent-mid);}
+textarea{resize:vertical;min-height:70px;line-height:1.5;}
+.outcome-btns{display:flex;gap:8px;}
+.outcome-btn{flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:13px;cursor:pointer;transition:all 0.15s;font-family:var(--sans);}
+.outcome-btn.sel-yes{background:var(--accent-light);border-color:var(--accent-mid);color:var(--accent);font-weight:500;}
+.outcome-btn.sel-no{background:var(--danger-light);border-color:var(--danger);color:var(--danger);font-weight:500;}
+.outcome-btn.sel-maybe{background:var(--warn-light);border-color:var(--warn);color:var(--warn);font-weight:500;}
+.save-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans);letter-spacing:0.02em;transition:background 0.15s;}
+.save-btn:hover{background:#1f3f12;}
+.save-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+
+/* ENTRIES */
+.entries-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+.entries-list{display:flex;flex-direction:column;gap:0.75rem;}
+.entry-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;position:relative;}
+.entry-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem;}
+.entry-name{font-weight:500;font-size:15px;}
+.entry-outcome{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;padding:3px 8px;border-radius:4px;flex-shrink:0;}
+.out-yes{background:var(--accent-light);color:var(--accent);}
+.out-no{background:var(--danger-light);color:var(--danger);}
+.out-maybe{background:var(--warn-light);color:var(--warn);}
+.entry-note{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:0.5rem;}
+.entry-meta{font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;gap:1rem;}
+.entry-delete{position:absolute;top:10px;right:40px;background:none;border:none;cursor:pointer;color:var(--border);font-size:16px;padding:2px 6px;border-radius:4px;transition:color 0.15s;}
+.entry-delete:hover{color:var(--danger);}
+.empty-state{text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:var(--mono);}
+
+/* EXPORT */
+.export-btn{font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border);padding:5px 12px;border-radius:5px;cursor:pointer;color:var(--muted);transition:all 0.15s;}
+.export-btn:hover{border-color:var(--accent-mid);color:var(--accent);}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-family:var(--mono);font-size:12px;padding:8px 18px;border-radius:20px;opacity:0;transition:all 0.2s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">suq-tracker v1</div>
+  <div class="date-badge" id="date-badge"></div>
+</header>
+
+<div class="container">
+
+  <!-- TODAY'S FOCUS -->
+  <div class="focus-card">
+    <div class="section-label">today's focus</div>
+    <div class="focus-text" id="focus-display">Add → Gave → Search → Got (if they came to pay) → Fill shop details → Send reminder</div>
+    <div style="margin-top:0.75rem;display:flex;gap:8px;">
+      <input type="text" id="focus-input" placeholder="Type today's focus..." style="flex:1;font-size:13px;">
+      <button onclick="saveFocus()" style="padding:8px 14px;background:var(--ink);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Save</button>
+    </div>
+  </div>
+
+  <!-- COUNTER -->
+  <div class="counter-block">
+    <div class="counter-num" id="counter">0</div>
+    <div class="counter-meta">
+      <div class="counter-label">shops visited today</div>
+      <div class="counter-stats">
+        <span class="stat-pill pill-yes" id="stat-yes">0 interested</span>
+        <span class="stat-pill pill-no" id="stat-no">0 rejected</span>
+        <span class="stat-pill pill-maybe" id="stat-maybe">0 maybe</span>
+      </div>
+    </div>
+    <button class="tap-btn" onclick="tap()" title="Tap after each shop visit">+</button>
+  </div>
+
+  <!-- LOG FORM -->
+  <div class="log-form">
+    <div class="section-label">log this shop</div>
+    <div class="form-row">
+      <label>Shop name / owner</label>
+      <input type="text" id="f-name" placeholder="e.g. Ato Kebede — Merkato entrance">
+    </div>
+    <div class="form-row">
+      <label>What happened</label>
+      <textarea id="f-note" placeholder="e.g. He tracks debt in a notebook. Interested but wants to see it on Android first. Has 40+ customers on credit."></textarea>
+    </div>
+    <div class="form-row">
+      <label>Outcome</label>
+      <div class="outcome-btns">
+        <button class="outcome-btn" id="btn-yes" onclick="setOutcome('yes')">Interested</button>
+        <button class="outcome-btn" id="btn-no" onclick="setOutcome('no')">Rejected</button>
+        <button class="outcome-btn" id="btn-maybe" onclick="setOutcome('maybe')">Maybe</button>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Location (optional)</label>
+      <input type="text" id="f-loc" placeholder="e.g. Merkato, near post office">
+    </div>
+    <button class="save-btn" onclick="saveEntry()">Save entry</button>
+  </div>
+
+  <!-- ENTRIES -->
+  <div class="entries-header">
+    <div class="section-label" style="margin:0">field notes (<span id="entry-count">0</span>)</div>
+    <button class="export-btn" onclick="exportCSV()">export CSV</button>
+  </div>
+  <div class="entries-list" id="entries-list">
+    <div class="empty-state">No entries yet — tap + after each shop visit</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TODAY = new Date().toISOString().split('T')[0];
+let outcome = '';
+
+function getKey(k){ return `suq_${TODAY}_${k}`; }
+function load(k,def){ try{ const v=localStorage.getItem(k); return v===null?def:JSON.parse(v); }catch(e){ return def; } }
+function save(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+// Date
+document.getElementById('date-badge').textContent=new Date().toLocaleDateString('en-ET',{weekday:'short',day:'numeric',month:'short'});
+
+// Focus
+function loadFocus(){
+  const f=load('suq_focus','Add → Gave → Search → Got (if they came to pay) → Fill shop details → Send reminder');
+  document.getElementById('focus-display').textContent=f;
+  document.getElementById('focus-input').value=f;
+}
+function saveFocus(){
+  const v=document.getElementById('focus-input').value.trim();
+  if(!v) return;
+  save('suq_focus',v);
+  document.getElementById('focus-display').textContent=v;
+  toast('Focus saved');
+}
+loadFocus();
+
+// Counter
+function getCount(){ return load(getKey('count'),0); }
+function tap(){
+  const n=getCount()+1;
+  save(getKey('count'),n);
+  document.getElementById('counter').textContent=n;
+  animateTap();
+}
+function animateTap(){
+  const el=document.getElementById('counter');
+  el.style.transform='scale(1.15)';
+  setTimeout(()=>el.style.transform='',150);
+}
+document.getElementById('counter').textContent=getCount();
+
+// Outcome
+function setOutcome(o){
+  outcome=o;
+  ['yes','no','maybe'].forEach(x=>{
+    document.getElementById('btn-'+x).className='outcome-btn'+(x===o?' sel-'+x:'');
+  });
+}
+
+// Entries
+function getEntries(){ return load(getKey('entries'),[]); }
+
+function renderEntries(){
+  const entries=getEntries();
+  const el=document.getElementById('entries-list');
+  document.getElementById('entry-count').textContent=entries.length;
+  updateStats(entries);
+  if(!entries.length){
+    el.innerHTML='<div class="empty-state">No entries yet — tap + after each shop visit</div>';
+    return;
+  }
+  el.innerHTML=entries.slice().reverse().map((e,ri)=>{
+    const i=entries.length-1-ri;
+    const outClass={yes:'out-yes',no:'out-no',maybe:'out-maybe'}[e.outcome]||'out-maybe';
+    const outLabel={yes:'INTERESTED',no:'REJECTED',maybe:'MAYBE'}[e.outcome]||'—';
+    return `<div class="entry-card">
+      <div class="entry-top">
+        <div class="entry-name">${esc(e.name||'Unnamed shop')}</div>
+        <span class="entry-outcome ${outClass}">${outLabel}</span>
+      </div>
+      ${e.note?`<div class="entry-note">${esc(e.note)}</div>`:''}
+      <div class="entry-meta">
+        <span>${e.time}</span>
+        ${e.loc?`<span>${esc(e.loc)}</span>`:''}
+      </div>
+      <button class="entry-delete" onclick="deleteEntry(${i})" title="Delete">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function updateStats(entries){
+  const counts={yes:0,no:0,maybe:0};
+  entries.forEach(e=>{ if(counts[e.outcome]!==undefined) counts[e.outcome]++; });
+  document.getElementById('stat-yes').textContent=counts.yes+' interested';
+  document.getElementById('stat-no').textContent=counts.no+' rejected';
+  document.getElementById('stat-maybe').textContent=counts.maybe+' maybe';
+  document.getElementById('counter').textContent=getCount();
+}
+
+function saveEntry(){
+  const name=document.getElementById('f-name').value.trim();
+  const note=document.getElementById('f-note').value.trim();
+  const loc=document.getElementById('f-loc').value.trim();
+  if(!name && !note){ toast('Add a name or note'); return; }
+  const entries=getEntries();
+  entries.push({
+    name,note,loc,
+    outcome:outcome||'maybe',
+    time:new Date().toLocaleTimeString('en-ET',{hour:'2-digit',minute:'2-digit'}),
+    ts:Date.now()
+  });
+  save(getKey('entries'),entries);
+  // reset form
+  document.getElementById('f-name').value='';
+  document.getElementById('f-note').value='';
+  document.getElementById('f-loc').value='';
+  outcome='';
+  ['yes','no','maybe'].forEach(x=>document.getElementById('btn-'+x).className='outcome-btn');
+  renderEntries();
+  toast('Saved');
+}
+
+function deleteEntry(i){
+  if(!confirm('Delete this entry?')) return;
+  const entries=getEntries();
+  entries.splice(i,1);
+  save(getKey('entries'),entries);
+  renderEntries();
+}
+
+function exportCSV(){
+  const entries=getEntries();
+  if(!entries.length){ toast('No entries to export'); return; }
+  const rows=[['Date','Time','Shop','Outcome','Note','Location']];
+  entries.forEach(e=>rows.push([TODAY,e.time,e.name,e.outcome,e.note,e.loc]));
+  const csv=rows.map(r=>r.map(c=>'"'+(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`suq-research-${TODAY}.csv`;
+  a.click();
+  toast('CSV exported');
+}
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+renderEntries();
+
+// Save focus on enter
+document.getElementById('focus-input').addEventListener('keydown',e=>{ if(e.key==='Enter') saveFocus(); });
+document.getElementById('f-name').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('f-note').focus(); });
+</script>
+</body>
+</html>
